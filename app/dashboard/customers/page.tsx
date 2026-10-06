@@ -1,0 +1,8 @@
+import Link from 'next/link';
+import { Users } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+export default async function Customers(){
+ const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)return <div className="container" style={{paddingTop:40}}>Please log in.</div>;
+ const {data:business}=await supabase.from('businesses').select('id').eq('owner_id',user.id).limit(1).maybeSingle(); const {data:customers}=business?await supabase.from('customers').select('id,name,phone,address,created_at').eq('business_id',business.id).order('created_at',{ascending:false}).limit(200):{data:[]};
+ return <div className="container" style={{paddingTop:34,paddingBottom:50}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'end',marginBottom:22}}><div><h1 className="page-title">Customers</h1><p className="subtle">Customers are added automatically when you create or import orders.</p></div><Link href="/dashboard/orders/new" className="btn btn-primary">+ New order</Link></div><div className="card" style={{overflow:'hidden'}}>{customers?.length?<div className="table-wrap"><table className="app-table"><thead><tr>{['Customer','Phone','Address','Added'].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{customers.map(c=><tr key={c.id}><td style={{fontWeight:600}}>{c.name}</td><td>{c.phone||'—'}</td><td>{c.address||'—'}</td><td className="subtle">{new Date(c.created_at).toLocaleDateString()}</td></tr>)}</tbody></table></div>:<div className="empty-state"><div className="empty-icon"><Users size={24}/></div><h3>No customers yet</h3><p className="subtle">Create your first order to add a customer.</p></div>}</div></div>
+}
